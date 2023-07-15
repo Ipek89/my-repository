@@ -3,18 +3,18 @@ Description: |
   CloudFormation template for a static https website with CloudFront and Route 53 domain.
   
 Parameters:
-​
+
   pKittensDomainName:
     Description: Full subdomain for kittens website
     Type: String
     Default: mykittens.dripek.net
-​
+
   pHostedZoneId:
     Description: Hosted Zone ID
     Type: AWS::Route53::HostedZone::Id
-​
+
 Resources:
-​
+
   rKittensBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -31,7 +31,7 @@ Resources:
           - BucketKeyEnabled: true
             ServerSideEncryptionByDefault: 
                 SSEAlgorithm: AES256
-​
+
   rKittensBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -45,7 +45,7 @@ Resources:
             Principal: '*'
             Action: 's3:GetObject'
             Resource: !Join [ '', [ !GetAtt rKittensBucket.Arn, '/*' ] ]
-​
+
   rDomainCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties: 
@@ -54,7 +54,7 @@ Resources:
       DomainValidationOptions: 
         - DomainName: !Ref pKittensDomainName
           HostedZoneId: !Ref pHostedZoneId
-​
+
   rCloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -86,7 +86,7 @@ Resources:
           TargetOriginId: KittensOrigin
         HttpVersion: http2
         PriceClass: PriceClass_100
-​
+
   rRecordSet:
     Type: AWS::Route53::RecordSet
     Properties: 
@@ -98,19 +98,19 @@ Resources:
       Type: A
   
 Outputs:
-​
+
   CloudFrontURL:
     Description: URL to reach cloudfront distributions
     Value: !Join [ '', [ 'https://', !GetAtt rCloudFrontDistribution.DomainName ] ]
-​
+
   S3WebsiteURL:
     Description: URL to reach s3 website directly
     Value: !GetAtt rKittensBucket.WebsiteURL
-​
+
   KittensDomainName:
     Description: Domain name for recordset
     Value: !Join [ '', [ 'https://', !Ref rRecordSet ] ]
-Collapse
+
 
 
 

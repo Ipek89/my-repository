@@ -22,7 +22,7 @@ Resources:
   PhonebookDatabaseInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: altaz-phonebook-rds
+      DBInstanceIdentifier: ipek-phonebook-rds
       DBName: clarusway_phonebook
       Engine: MySQL
       EngineVersion: "8.0.33"
