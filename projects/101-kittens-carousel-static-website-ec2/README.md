@@ -82,7 +82,7 @@ Kittens Carousel is a static website application deployed with Apache Web Server
 - use git commands (push, pull, commit, add etc.) and Github as Version Control System.
 
 ## Steps to Solution
-  
+  bbl
 - Step 1: Download or clone project definition from `clarusway` repo on Github 
 
 - Step 2: Create project folder for local public repo on your pc
