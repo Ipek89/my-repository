@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  CloudFormation Template for Roman Numerals Converter Application.
+  This template creates a Python Flask Web Application on Amazon Linux 2 AMI
+  (ami-07fa59ce6da2fe3fe) EC2 Instance with a custom security group allowing
+  HTTP connections on port 80 and SSH connections on port 22. The Roman Numerals
+  Converter Application is downloaded from the GitHub repository and then installed on Flask.
+
+Parameters:
+  Keyname: 
+    Description: Enter the name of your Key Pair for SSH connections.
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources:
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP for Flask Web Server and SSH port to secure connection to my server
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  WebServerHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0b72821e2f351e396
+      InstanceType: t2.micro
+      KeyName: !Ref Keyname
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub Web Server of ${AWS::StackName}
+      UserData: !Base64 |
+        #!/bin/bash
+        yum update -y
+        yum install -y python3
+        pip3 install flask
+        cd /home/ec2-user
+        FOLDER="https://raw.githubusercontent.com/Ipek89/my-repository/main/projects/001-roman-numerals-converter/roman-numerals-converter-"
+        wget ${FOLDER}/app.py
+        mkdir -p templates && cd templates
+        wget ${FOLDER}/templates/index.html
+        wget ${FOLDER}/templates/result.html
+        cd ..
+        nohup python3 app.py > /var/log/app.log 2>&1 &
+
+Outputs:
+  WebsiteURL:
+   Value: !Sub
+      - http://${PublicAddress}
+      - PublicAddress: !GetAtt WebServerHost.PublicDnsName
