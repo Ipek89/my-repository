@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text  # Import text from SQLAlchemy
 
 app = Flask(__name__)
 
@@ -9,63 +10,63 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # - drop users table if exists, create new users table and add some rows for sample
-drop_table = 'DROP TABLE IF EXISTS users;'
-users_table = """ 
+drop_table = text('DROP TABLE IF EXISTS users;')
+users_table = text(""" 
 CREATE TABLE users(
 username VARCHAR NOT NULL PRIMARY KEY,
 email VARCHAR);
-"""
-data = """
+""")
+data = text("""
 INSERT INTO users
 VALUES
-	("Tuba", "tuba@amazon.com" ),
-	("Ethan", "ethan@micrasoft.com"),
-	("mostafa", "mostafa@facebook.com"),
+    ("Tuba", "tuba@amazon.com" ),
+    ("Ethan", "ethan@micrasoft.com"),
+    ("mostafa", "mostafa@facebook.com"),
     ("sait", "sait@tesla.com"),
     ("busra","busra@google");
-"""
-
+""")
 
 # - Execute sql commands and commit them
-db.session.execute(drop_table)
-db.session.execute(users_table)
-db.session.execute(data)
-db.session.commit()
+with app.app_context():
+    db.session.execute(drop_table)
+    db.session.execute(users_table)
+    db.session.execute(data)
+    db.session.commit()
 
-# - Write a function named `find_emails` which find emails using keyword from the user table in the db,
+# - Write a function named `find_emails` which finds emails using keyword from the user table in the db,
 # - and returns result as tuples `(name, email)`.
 def find_emails(keyword):
-    query = f"""
+    query = text(f"""
     SELECT * FROM users WHERE username like '%{keyword}%';
-    """
-    result = db.session.execute(query)
-    user_emails = [(row[0], row[1]) for row in result]
-    if not any(user_emails):
-        user_emails = [("Not Found", "Not Found")]
-    return user_emails
+    """)
+    with app.app_context():
+        result = db.session.execute(query)
+        user_emails = [(row[0], row[1]) for row in result]
+        if not any(user_emails):
+            user_emails = [("Not Found", "Not Found")]
+        return user_emails
 
-
-# - Write a function named `insert_email` which adds new email to users table the db.
-def insert_email(name,email):
-    query = f"""
+# - Write a function named `insert_email` which adds new email to users table in the db.
+def insert_email(name, email):
+    query = text(f"""
     SELECT * FROM users WHERE username like '{name}'
-    """
-    result = db.session.execute(query)
-    response = ''
-    if len(name) == 0 or len(email) == 0:
-        response = 'Username or email can not be empty!!'
-    elif not any(result):
-        insert = f"""
-        INSERT INTO users
-        VALUES ('{name}', '{email}');
-        """
-        result = db.session.execute(insert)
-        db.session.commit()
-        response = f"User {name} and {email} have been added successfully"
-    else:
-        response = f"User {name} already exist"
-    return response
-
+    """)
+    with app.app_context():
+        result = db.session.execute(query)
+        response = ''
+        if len(name) == 0 or len(email) == 0:
+            response = 'Username or email cannot be empty!!'
+        elif not any(result):
+            insert = text(f"""
+            INSERT INTO users
+            VALUES ('{name}', '{email}');
+            """)
+            db.session.execute(insert)
+            db.session.commit()
+            response = f"User {name} and {email} have been added successfully"
+        else:
+            response = f"User {name} already exists"
+        return response
 
 # - Write a function named `emails` which finds email addresses by keyword using `GET` and `POST` methods,
 # - using template files named `emails.html` given under `templates` folder
@@ -78,7 +79,6 @@ def emails():
         return render_template('emails.html', name_emails=user_emails, keyword=user_app_name, show_result=True)
     else:
         return render_template('emails.html', show_result=False)
-
 
 # - Write a function named `add_email` which inserts new email to the database using `GET` and `POST` methods,
 # - using template files named `add-email.html` given under `templates` folder
@@ -93,7 +93,7 @@ def add_email():
     else:
         return render_template('add-email.html', show_result=False)
 
-
 # - Add a statement to run the Flask application which can be reached from any host on port 80.
-if __name__=='__main__':
-    app.run(debug=True)
+if __name__ == '__main__':
+    # app.run(debug=True)
+    app.run(host='0.0.0.0.', port=80)
